@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-svc
+  labels:
+    env: grafana
+spec:
+  ports:
+    - port: 3000
+  selector:
+    env: grafana
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  labels:
+    env: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  labels:
+    env: grafana
+spec:
+  selector:
+    matchLabels:
+      env: grafana
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        env: grafana
+    spec:
+      containers:
+      - image: princeprashantsaini/grafana:v1
+        name: grafana
+        ports:
+        - containerPort: 3000
+          name: grafana
+        volumeMounts:
+        - name: grafana-volume
+          mountPath: /var/lib/grafana
+      volumes:
+      - name: grafana-volume
+        persistentVolumeClaim:
+          claimName: grafana-pvc
